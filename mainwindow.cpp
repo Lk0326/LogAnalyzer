@@ -343,6 +343,8 @@ void MainWindow::setupUi()
                 allLogs.clear();
                 searchEdit->clear();
                 levelCombo->setCurrentIndex(0);
+                startTimeEdit->setDateTime(QDateTime(QDate::currentDate(), QTime(0, 0, 0)));
+                endTimeEdit->setDateTime(QDateTime(QDate::currentDate(), QTime(23, 59, 59)));
                 logView->clear();
                 fileNameLabel->setText("当前文件：未加载");
                 updateLogStats();
@@ -439,24 +441,35 @@ void MainWindow::searchLogs()
         const QString &line = allLogs.at(i);
 
         // 解析日志开头的时间
-        if (line.size() < 19)
+        QDateTime logTime;
+
+        if (line.size() >= 19)
         {
-            continue;
+            logTime = QDateTime::fromString(
+                line.left(19), "yyyy-MM-dd HH:mm:ss"
+                );
         }
 
-        QDateTime logTime = QDateTime::fromString(
-            line.left(19), "yyyy-MM-dd HH:mm:ss"
-            );
+        // 判断日期范围是否有效
+        QDateTime startTime = startTimeEdit->dateTime();
+        QDateTime endTime = endTimeEdit->dateTime();
+
+        bool timeMatch = false;
 
         if (!logTime.isValid())
         {
-            continue;
+            // 时间格式异常的日志：仅在未限制日期范围时显示
+            timeMatch =
+                startTime == QDateTime(QDate::currentDate(), QTime(0, 0, 0)) &&
+                endTime == QDateTime(QDate::currentDate(), QTime(23, 59, 59));
         }
-
-        // 判断日志时间是否在选定范围内
-        bool timeMatch =
-            logTime >= startTimeEdit->dateTime() &&
-            logTime <= endTimeEdit->dateTime();
+        else
+        {
+            // 时间格式正常的日志：按选定日期范围筛选
+            timeMatch =
+                logTime >= startTime &&
+                logTime <= endTime;
+        }
 
         // 判断关键字和日志级别
         bool keywordMatch =
