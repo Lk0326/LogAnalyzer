@@ -621,17 +621,16 @@ void MainWindow::onLogLoadingFinished()
 
 void MainWindow::loadLogFileAsync(const QString &filePath)
 {
-    // 显示当前加载的文件名
-    fileNameLabel->setText(
-        "当前文件：" + QFileInfo(filePath).fileName()
-        );
     // 如果上一次的后台任务还在运行，暂时不启动新任务
     if (logWatcher->isRunning())
     {
         statusLabel->setText("日志正在加载，请稍候...");
         return;
     }
-
+    // 显示当前加载的文件名
+    fileNameLabel->setText(
+        "当前文件：" + QFileInfo(filePath).fileName()
+        );
     // 清空旧日志，提示用户正在加载
     logView->clear();
     statusLabel->setText("正在后台加载日志...");
